@@ -97,10 +97,22 @@ async function seedSuperAdmin() {
   }
 }
 
+//Runs on server startup to handle interrupted jobs from previous server restarts
+async function recoverIncompleteJobs(){
+  const interruptedJobs = await Job.find({ status:'PROCESSING'});
+  for(let job of interruptedJobs){
+    processJobAsync(job._id); //Re- queue or retry processing safely
+  }
+}
+
 // Routes
 app.get('/', (req, res) => {
   res.json({ message: 'API is running...', timestamp: new Date() });
 });
+
+//mount job route
+const jobRoutes = require('./routes/jobs');
+app.use('/api/jobs',jobRoutes);
 
 // Mount OTP routes
 const otpRoutes = require('./routes/otp');
@@ -108,6 +120,7 @@ app.use('/api/otp', otpRoutes);
 
 // Mount Admin state routes
 const adminRoutes = require('./routes/admin');
+const { processJobAsync } = require('./routes/jobs');
 app.use('/api/admin', adminRoutes);
 
 // Register endpoint

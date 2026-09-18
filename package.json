@@ -12,6 +12,7 @@
     "@testing-library/user-event": "^13.5.0",
     "chart.js": "^4.5.0",
     "file-saver": "^2.0.5",
+    "multer": "^2.4.0",
     "nodemailer": "^7.0.5",
     "plotly.js-dist": "^3.1.0",
     "react": "^19.1.0",

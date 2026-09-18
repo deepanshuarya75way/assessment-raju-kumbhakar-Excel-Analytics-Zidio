@@ -1,6 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const AdminState = require('../models/AdminState');
+const Job = require('../models/Job');
 
 // Use already-compiled User model from server.js
 const User = () => mongoose.model('User');
@@ -35,6 +36,13 @@ router.get('/state', requireAdminApiKey, async (req, res) => {
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });
+
+//admin can see system wide progress
+router.get('/job-metrics', async (req,res) => {
+  const running = await Job.countDocuments({ status: 'PROCESSING'});
+  const failed = await Job.countDocuments({status:'FAILED'});
+  res.json({runningJobs:running, failedJobs:failed});
+})
 
 // Upsert admin state
 router.put('/state', requireAdminApiKey, async (req, res) => {

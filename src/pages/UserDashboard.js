@@ -39,6 +39,8 @@ ChartJS.register(
  * Features: File upload, Excel parsing, chart type selection, data mapping, chart generation
  */
 const UserDashboard = () => {
+  const [jobs, setJobs] =useState([]);
+  const [selectedJob, setSelectedJob] = useState(null);
   const [uploadedFiles, setUploadedFiles] = useState([]);
   const [selectedFile, setSelectedFile] = useState(null);
   const [chartType, setChartType] = useState('2d'); // '2d' or '3d'
@@ -59,6 +61,27 @@ const UserDashboard = () => {
   const [maintenanceStarted, setMaintenanceStarted] = useState(null); // Timestamp (ms) when maintenance started
   const [countdown, setCountdown] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
   const [progressPct, setProgressPct] = useState(0);
+
+//fetch user job from server
+const fetchUserJob = async () => {
+  try{
+    const response = await fetch('/api/jobs');
+    if(response.ok){
+      const data = await response.json();
+      setJobs(data);
+    }
+  }
+  catch (err) {
+    console.error('Error fetching jobs',err);
+  }
+}
+
+//poll jobs Every 3 second for live updates
+useEffect(() =>{
+  fetchUserJobs();
+  const interval = setInterval(fetchUserJobs,3000);
+  return () => clearInterval(interval);
+},[]);
 
   // Read maintenance flag and react to changes from System Settings (top-level hook)
   useEffect(() => {
@@ -134,7 +157,7 @@ const UserDashboard = () => {
    * Handle file upload and Excel parsing
    * @param {File} file - The uploaded Excel file
    */
-  const handleFileUpload = (file) => {
+  const handleFileUpload = async(file) => {
     const user = JSON.parse(localStorage.getItem('user') || 'null');
     // System settings enforcement
     try {
@@ -152,6 +175,31 @@ const UserDashboard = () => {
         }
       }
     } catch {}
+    const formdata = new FormData();
+    formData.append('file',file);
+
+    try{
+      const res = await fetch('/api/jobs/upload',{
+        method:'POST',
+        body:formData
+      })
+      const data = await res.json();
+
+      if(res.ok){
+        alert('File submitted successfully');
+        fetchUserJobs();
+        activityTracker.logActivity('file_upload', user?.email || 'ananymous',{
+          fileName:file.name,
+          jobId:data.jobId
+        })
+      }else{
+        alert(data.error || 'upload failed');
+      }
+    } catch (err){
+      console.error('Upload Error:' err);
+      alert('FAiled to upload file to backend server');
+    }
+  }
 
     const reader = new FileReader();
     
