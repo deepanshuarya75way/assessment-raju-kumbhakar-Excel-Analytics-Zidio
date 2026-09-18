@@ -182,7 +182,7 @@ useEffect(() =>{
       const res = await fetch('/api/jobs/upload',{
         method:'POST',
         body:formData
-      })
+      });
       const data = await res.json();
 
       if(res.ok){
@@ -191,15 +191,15 @@ useEffect(() =>{
         activityTracker.logActivity('file_upload', user?.email || 'ananymous',{
           fileName:file.name,
           jobId:data.jobId
-        })
+        });
       }else{
         alert(data.error || 'upload failed');
       }
     } catch (err){
-      console.error('Upload Error:' err);
+      console.error('Upload Error:', err);
       alert('FAiled to upload file to backend server');
     }
-  }
+  };
 
   //load parsed Background job output into state
 
