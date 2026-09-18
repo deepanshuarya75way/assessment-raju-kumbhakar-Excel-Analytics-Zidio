@@ -63,7 +63,7 @@ const UserDashboard = () => {
   const [progressPct, setProgressPct] = useState(0);
 
 //fetch user job from server
-const fetchUserJob = async () => {
+const fetchUserJobs = async () => {
   try{
     const response = await fetch('/api/jobs');
     if(response.ok){
@@ -198,6 +198,36 @@ useEffect(() =>{
     } catch (err){
       console.error('Upload Error:' err);
       alert('FAiled to upload file to backend server');
+    }
+  }
+
+  //load parsed Background job output into state
+
+  const handleLoadJobResult = (job) =>{
+    if(job.status !=='COMPLETED' || !job.result || !job.result.data){
+      alert('job results are not ready yet');
+      return;
+    }
+    const rows = jobs.reslut.data;
+    if(rows.length ===0){
+      alert('Uploaded file contains no data row');
+      return;
+    }
+    const headers = Object.keys(rows[0]);
+    const sheetData = [headers, ...rows.map(row =>Object.values(row))];
+
+    setColumns(headers);
+    setSelectedJob(job);
+    setExcelData({
+      headers,
+      sheets:sheetData
+    });
+    console.log('job results loaded into view', job._id);
+  }
+  const cleanupChart = () =>{
+    if(chartRef.current){
+      chartRef.current.destroy();
+      chartRef.current =null;
     }
   }
 
